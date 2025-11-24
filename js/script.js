@@ -334,7 +334,7 @@ $(function () {
   /* ------------------------------
      REVIEW SYSTEM
   ------------------------------ */
-  function openReviewFormDialog(orderId, orderCard) {
+  function openReviewFormDialog(orderId) {
     // Reset form
     $("#reviewer-name").val("");
     $("#review-text").val("");
@@ -362,11 +362,11 @@ $(function () {
 
           $(this).dialog("close");
 
-          // Update button text
-          orderCard.find(".review-btn").text("View Reviews");
+          // Update button text using orderId
+          $("#" + orderId).find(".review-btn").text("View Reviews");
 
           // Show reviews dialog
-          openReviewListDialog(orderId, orderCard);
+          openReviewListDialog(orderId);
         },
         "Cancel": function () {
           $(this).dialog("close");
@@ -375,7 +375,7 @@ $(function () {
     });
   }
 
-  function openReviewListDialog(orderId, orderCard) {
+  function openReviewListDialog(orderId) {
     let list = reviewsByOrder[orderId];
     let html = "<h3>Reviews for " + orderId + "</h3>";
 
@@ -405,22 +405,21 @@ $(function () {
     // Handle "Add Another Review" button click
     $("#add-review-btn").off("click").on("click", function () {
       $("#reviews-list").dialog("close");
-      openReviewFormDialog(orderId, orderCard);
+      openReviewFormDialog(orderId);
     });
   }
 
   $(document).on("click", ".review-btn", function () {
-    let orderCard = $(this).closest(".order-card");
-    let orderId = orderCard.attr("id");
+    let orderId = $(this).closest(".order-card").attr("id");
 
     if (!reviewsByOrder[orderId]) {
       reviewsByOrder[orderId] = [];
     }
 
     if (reviewsByOrder[orderId].length > 0) {
-      openReviewListDialog(orderId, orderCard);
+      openReviewListDialog(orderId);
     } else {
-      openReviewFormDialog(orderId, orderCard);
+      openReviewFormDialog(orderId);
     }
   });
   });
