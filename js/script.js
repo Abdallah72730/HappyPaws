@@ -5,6 +5,21 @@ $(function () {
   ------------------------------ */
   $("#tabs").tabs();
 
+  
+  /* ------------------------------
+     TESTIMONIAL SLIDESHOW
+  ------------------------------ */
+  let testimonials = $("#testimonials .testimonial");
+  let tIndex = 0;
+  setInterval(function () {
+    $(testimonials[tIndex]).fadeOut(800, function () {
+      tIndex = (tIndex + 1) % testimonials.length;
+      $(testimonials[tIndex]).fadeIn(800);
+    });
+  }, 4000);
+
+
+
 
   /* ------------------------------
      ACCORDION
@@ -267,19 +282,6 @@ $(function () {
       $("#orderIdCombo").append(`<option value="${$(this).attr("id")}">${$(this).attr("id")}</option>`);
     });
   }
-
-
-  /* ------------------------------
-     TESTIMONIAL SLIDESHOW
-  ------------------------------ */
-  let testimonials = $("#testimonials .testimonial");
-  let tIndex = 0;
-  setInterval(function () {
-    $(testimonials[tIndex]).fadeOut(800, function () {
-      tIndex = (tIndex + 1) % testimonials.length;
-      $(testimonials[tIndex]).fadeIn(800);
-    });
-  }, 4000);
 
 
   /* ------------------------------
