@@ -5,6 +5,8 @@ $(function () {
   ------------------------------ */
   $("#tabs").tabs();
 
+  let reviewsByOrder = {};
+
   
   /* ------------------------------
      TESTIMONIAL SLIDESHOW
@@ -212,7 +214,10 @@ $(function () {
               <td>${$("#grand-total").text()}</td>
             </tr>
           </tfoot>
-        </table>
+        </table><br>
+        <div style="text-align:right;">
+          <button class="review-btn" colspan ="5" style="text-align:right; display:none" >Submit a Review</button>
+        </div>
 
         <div class="progress-bar-container" style="background:#ddd; height:25px; border-radius:5px; margin-top:10px;">
           <div class="progress-bar" style="width:0%; background:#1E90FF; height:100%; border-radius:5px;"></div>
@@ -259,8 +264,8 @@ $(function () {
         bar.css("width", "100%");
         label.text("Completed");
         bar.css("background", statuses[3].color);
-
-        $("#reviews").show();
+        $(".review-btn").show();
+        // $("#reviews").show();
         return;
       }
 
@@ -292,10 +297,10 @@ $(function () {
   });
 
 
-  /* ------------------------------
+ /* ------------------------------
      STAR RATING
   ------------------------------ */
-  let savedScore = 0;
+  let selectedRating = 0;
 
   $(".star").on("mouseenter", function () {
     let value = $(this).data("value");
@@ -311,7 +316,7 @@ $(function () {
 
   $(".star").on("click", function () {
     let value = $(this).data("value");
-    savedScore = value;
+    selectedRating = value;
 
     $(".star").each(function () {
       let active = $(this).data("value") <= value;
@@ -326,41 +331,96 @@ $(function () {
     return s;
   }
 
-
   /* ------------------------------
-     REVIEW FORM
+     REVIEW SYSTEM
   ------------------------------ */
-  const reviewContainer = $("#reviews-list");
-  const form = $("#review-form");
+  function openReviewFormDialog(orderId, orderCard) {
+    // Reset form
+    $("#reviewer-name").val("");
+    $("#review-text").val("");
+    selectedRating = 0;
+    $(".star").removeClass("filled").text("☆");
 
-  form.on("submit", function (e) {
-    e.preventDefault();
+    $("#reviews").dialog({
+      modal: true,
+      width: 450,
+      buttons: {
+        "Submit": function () {
+          let name = $("#reviewer-name").val().trim();
+          let text = $("#review-text").val().trim();
+          
+          if (name === "" || text === "" || selectedRating === 0) {
+            alert("Please fill in all fields and select a rating.");
+            return;
+          }
 
-    alert("Thank you for your review!");
+          reviewsByOrder[orderId].push({
+            name: name,
+            text: text,
+            rating: selectedRating
+          });
 
-    const selectedOrderId = $("#orderIdCombo").val();
-    const name = $("#reviewer-name").val();
-    const reviewText = $("#review-text").val();
+          $(this).dialog("close");
 
-    const reviewHtml = `
-      <div class="review" style="border:1px solid #ccc; padding:10px; margin-bottom:10px; border-radius:5px; background:#f9f9f9;">
-        <h2>${selectedOrderId}</h2>
-        <h4>${name}</h4>
-        <p>${reviewText}</p>
-        <p>Rating: ${returnStarString(savedScore)}</p>
-      </div>`;
+          // Update button text
+          orderCard.find(".review-btn").text("View Reviews");
 
-    reviewContainer.prepend(reviewHtml);
+          // Show reviews dialog
+          openReviewListDialog(orderId, orderCard);
+        },
+        "Cancel": function () {
+          $(this).dialog("close");
+        }
+      }
+    });
+  }
 
-    $("#reviews-list .review").each(function (i) {
-      $(this).toggleClass("hidden-order", i >= 5);
+  function openReviewListDialog(orderId, orderCard) {
+    let list = reviewsByOrder[orderId];
+    let html = "<h3>Reviews for " + orderId + "</h3>";
+
+    // Display existing reviews
+    list.forEach(function(review) {
+      html += `
+        <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px; border-radius:5px; background:#f9f9f9;">
+          <h4>${review.name}</h4>
+          <p>${review.text}</p>
+          <p style="color:gold; font-size:20px;">${returnStarString(review.rating)}</p>
+        </div>`;
     });
 
-    form[0].reset();
-    savedScore = 0;
+    // Add "Add Another Review" button if less than 2 reviews
+    if (list.length < 2) {
+      html += `<button id="add-review-btn" style="margin-top:10px; padding:8px 16px;">Add Another Review</button>`;
+    }
 
-    $(".star").text("☆").removeClass("filled");
+    $("#reviews-list").html(html);
 
+    $("#reviews-list").dialog({
+      modal: true,
+      width: 450,
+      title: "Reviews"
+    });
+
+    // Handle "Add Another Review" button click
+    $("#add-review-btn").off("click").on("click", function () {
+      $("#reviews-list").dialog("close");
+      openReviewFormDialog(orderId, orderCard);
+    });
+  }
+
+  $(document).on("click", ".review-btn", function () {
+    let orderCard = $(this).closest(".order-card");
+    let orderId = orderCard.attr("id");
+
+    if (!reviewsByOrder[orderId]) {
+      reviewsByOrder[orderId] = [];
+    }
+
+    if (reviewsByOrder[orderId].length > 0) {
+      openReviewListDialog(orderId, orderCard);
+    } else {
+      openReviewFormDialog(orderId, orderCard);
+    }
   });
-
-});
+  });
