@@ -568,7 +568,7 @@ $(function () {
 
     $("#reviews").dialog({
       modal: true,
-      width: 450,
+      width: 600,
       buttons: {
         "Submit": function () {
           let name = $("#reviewer-name").val().trim();
