@@ -19,7 +19,7 @@ $(function () {
       <span style="color: white; margin-right: 15px; vertical-align: middle;">Welcome, ${currentUser.name}!</span>
       <img id="profile-pic" src="${profilePicUrl}" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%; cursor: pointer; vertical-align: middle; border: 2px solid white;">
       
-      <div id="profile-menu" style="display: none; position: absolute; right: 0; top: 50px; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); min-width: 200px; z-index: 1000;">
+      <div id="profile-menu" style="text-align: left; display: none; position: absolute; right: 0; top: 50px; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); min-width: 200px; z-index: 1000;">
         <div style="padding: 15px; border-bottom: 1px solid #eee;">
           <div style="font-weight: bold; color: #333;">${currentUser.name}</div>
           <div style="color: #666; font-size: 12px;">${currentUser.email}</div>
