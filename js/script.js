@@ -1,4 +1,229 @@
 $(function () {
+   /* ------------------------------
+     CHECK LOGIN STATUS
+  ------------------------------ */
+  const currentUser = JSON.parse(localStorage.getItem('happypaw_current_user'));
+  
+  if (!currentUser) {
+    // Redirect to login if not logged in
+    window.location.href = "login.html";
+    return;
+  }
+
+  // Generate random profile picture (using UI Avatars API)
+  const profilePicUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=random&color=fff&size=40&rounded=true`;
+
+  // Display profile section in header
+  $("header").append(`
+    <div style="text-align: right; margin-top: 10px; position: relative;">
+      <span style="color: white; margin-right: 15px; vertical-align: middle;">Welcome, ${currentUser.name}!</span>
+      <img id="profile-pic" src="${profilePicUrl}" alt="Profile" style="width: 40px; height: 40px; border-radius: 50%; cursor: pointer; vertical-align: middle; border: 2px solid white;">
+      
+      <div id="profile-menu" style="display: none; position: absolute; right: 0; top: 50px; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); min-width: 200px; z-index: 1000;">
+        <div style="padding: 15px; border-bottom: 1px solid #eee;">
+          <div style="font-weight: bold; color: #333;">${currentUser.name}</div>
+          <div style="color: #666; font-size: 12px;">${currentUser.email}</div>
+        </div>
+        <div id="menu-change-name" style="padding: 12px 15px; cursor: pointer; color: #333; border-bottom: 1px solid #eee; transition: background 0.2s;">
+          <span style="margin-right: 8px;">👤</span>Change Name
+        </div>
+        <div id="menu-change-email" style="padding: 12px 15px; cursor: pointer; color: #333; border-bottom: 1px solid #eee; transition: background 0.2s;">
+          <span style="margin-right: 8px;">📧</span>Change Email
+        </div>
+        <div id="menu-change-password" style="padding: 12px 15px; cursor: pointer; color: #333; border-bottom: 1px solid #eee; transition: background 0.2s;">
+          <span style="margin-right: 8px;">🔒</span>Change Password
+        </div>
+        <div id="menu-logout" style="padding: 12px 15px; cursor: pointer; color: #d9534f; font-weight: bold; transition: background 0.2s;">
+          <span style="margin-right: 8px;">🚪</span>Logout
+        </div>
+      </div>
+    </div>
+  `);
+
+  // Add hover effects to menu items
+  $("#profile-menu > div:not(:first-child)").hover(
+    function() {
+      $(this).css("background", "#f5f5f5");
+    },
+    function() {
+      $(this).css("background", "white");
+    }
+  );
+
+  // Toggle profile menu
+  $("#profile-pic").click(function (e) {
+    e.stopPropagation();
+    $("#profile-menu").toggle();
+  });
+
+  // Close menu when clicking outside
+  $(document).click(function () {
+    $("#profile-menu").hide();
+  });
+
+  // Prevent menu from closing when clicking inside it
+  $("#profile-menu").click(function (e) {
+    e.stopPropagation();
+  });
+
+  /* ------------------------------
+     PROFILE MENU ACTIONS
+  ------------------------------ */
+  
+  // Change Name
+  $("#menu-change-name").click(function () {
+    $("#profile-menu").hide();
+    
+    $("<div>" +
+      "<p>Current name: <strong>" + currentUser.name + "</strong></p>" +
+      "<label for='new-name'>New Name:</label><br>" +
+      "<input type='text' id='new-name' style='width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;' placeholder='Enter new name'>" +
+      "</div>").dialog({
+      title: "Change Name",
+      modal: true,
+      width: 400,
+      buttons: {
+        "Update": function () {
+          const newName = $("#new-name").val().trim();
+          if (newName === "") {
+            alert("Name cannot be empty!");
+            return;
+          }
+          
+          // Update in localStorage
+          const users = JSON.parse(localStorage.getItem('happypaw_users'));
+          users[currentUser.email].name = newName;
+          localStorage.setItem('happypaw_users', JSON.stringify(users));
+          
+          currentUser.name = newName;
+          localStorage.setItem('happypaw_current_user', JSON.stringify(currentUser));
+          
+          $(this).dialog("close");
+          alert("Name updated successfully!");
+          location.reload();
+        },
+        "Cancel": function () {
+          $(this).dialog("close");
+        }
+      }
+    });
+  });
+
+  // Change Email
+  $("#menu-change-email").click(function () {
+    $("#profile-menu").hide();
+    
+    $("<div>" +
+      "<p>Current email: <strong>" + currentUser.email + "</strong></p>" +
+      "<label for='new-email'>New Email:</label><br>" +
+      "<input type='email' id='new-email' style='width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;' placeholder='Enter new email'>" +
+      "</div>").dialog({
+      title: "Change Email",
+      modal: true,
+      width: 400,
+      buttons: {
+        "Update": function () {
+          const newEmail = $("#new-email").val().trim().toLowerCase();
+          if (newEmail === "") {
+            alert("Email cannot be empty!");
+            return;
+          }
+          
+          const users = JSON.parse(localStorage.getItem('happypaw_users'));
+          
+          // Check if new email already exists
+          if (users[newEmail] && newEmail !== currentUser.email) {
+            alert("This email is already in use!");
+            return;
+          }
+          
+          // Move user data to new email key
+          users[newEmail] = users[currentUser.email];
+          users[newEmail].email = newEmail;
+          delete users[currentUser.email];
+          localStorage.setItem('happypaw_users', JSON.stringify(users));
+          
+          currentUser.email = newEmail;
+          localStorage.setItem('happypaw_current_user', JSON.stringify(currentUser));
+          
+          $(this).dialog("close");
+          alert("Email updated successfully!");
+          location.reload();
+        },
+        "Cancel": function () {
+          $(this).dialog("close");
+        }
+      }
+    });
+  });
+
+  // Change Password
+  $("#menu-change-password").click(function () {
+    $("#profile-menu").hide();
+    
+    $("<div>" +
+      "<label for='current-password'>Current Password:</label><br>" +
+      "<input type='password' id='current-password' style='width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px; box-sizing: border-box;' placeholder='Enter current password'><br>" +
+      "<label for='new-password'>New Password:</label><br>" +
+      "<input type='password' id='new-password' style='width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px; box-sizing: border-box;' placeholder='Enter new password (min 6 characters)'><br>" +
+      "<label for='confirm-password'>Confirm New Password:</label><br>" +
+      "<input type='password' id='confirm-password' style='width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box;' placeholder='Confirm new password'>" +
+      "</div>").dialog({
+      title: "Change Password",
+      modal: true,
+      width: 400,
+      buttons: {
+        "Update": function () {
+          const currentPassword = $("#current-password").val();
+          const newPassword = $("#new-password").val();
+          const confirmPassword = $("#confirm-password").val();
+          
+          if (currentPassword === "" || newPassword === "" || confirmPassword === "") {
+            alert("All fields are required!");
+            return;
+          }
+          
+          const users = JSON.parse(localStorage.getItem('happypaw_users'));
+          
+          // Verify current password
+          if (users[currentUser.email].password !== currentPassword) {
+            alert("Current password is incorrect!");
+            return;
+          }
+          
+          if (newPassword.length < 6) {
+            alert("New password must be at least 6 characters long!");
+            return;
+          }
+          
+          if (newPassword !== confirmPassword) {
+            alert("New passwords do not match!");
+            return;
+          }
+          
+          // Update password
+          users[currentUser.email].password = newPassword;
+          localStorage.setItem('happypaw_users', JSON.stringify(users));
+          
+          $(this).dialog("close");
+          alert("Password updated successfully!");
+        },
+        "Cancel": function () {
+          $(this).dialog("close");
+        }
+      }
+    });
+  });
+
+  // Logout
+  $("#menu-logout").click(function () {
+    $("#profile-menu").hide();
+    if (confirm("Are you sure you want to logout?")) {
+      localStorage.removeItem('happypaw_current_user');
+      window.location.href = "login.html";
+    }
+  });
+
 
   /* ------------------------------
      TABS
