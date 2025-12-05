@@ -1,5 +1,5 @@
 # Configuration files with sensitive data
-js copy/config.js
+js/config.js
 
 # OS files
 .DS_Store
